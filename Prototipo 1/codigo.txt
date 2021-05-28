@@ -1,0 +1,144 @@
+
+int interruptor4 = 1;     // 0 = desctivada 1 = activada
+int interruptor5 = 1;     // 0 = desctivada 1 = activada
+int interruptor6 = 1;     // 0 = desctivada 1 = activada
+int interruptor7 = 1;     // 0 = desctivada 1 = activada
+int interruptor8 = 1;     // 0 = desctivada 1 = activada
+int interruptor9 = 1;     // 0 = desctivada 1 = activada
+int SensorDistancia = 1;  // 0 = desctivada 1 = activada
+int TiempoAlarma = 60;    // Tiempo que suena la Sirena 
+
+int botonA = A0;             
+int botonB = A1;   
+int botonC = A2;   
+int botonD = A3;   
+int botonV = A4;  
+
+int BluValor='0';
+int estado = 0;
+int estadoAlarma = 0;
+#define sirena 12
+#define starter 11
+#define ledindicador 10
+#define inter4 4
+#define inter5 5
+#define inter6 6
+#define inter7 7
+#define inter8 8
+#define inter9 9
+
+int contador = 0;
+int contadorFdistancia = 0;
+int duracion, distancia, distanciaFija; 
+int tiempo = 0;
+
+void setup() {
+    
+  pinMode(ledindicador, OUTPUT);
+  pinMode(sirena, OUTPUT);
+  pinMode(starter, OUTPUT);
+  pinMode(inter4, INPUT);
+  pinMode(inter5, INPUT);
+  pinMode(inter6, INPUT);
+  pinMode(inter7, INPUT);
+  pinMode(inter8, INPUT);
+  pinMode(inter9, INPUT);
+  pinMode(2, INPUT);     // define el pin 2 como entrada (echo)
+  pinMode(3, OUTPUT);    // define el pin 3 como salida  (triger)
+}
+
+void loop() {
+ 
+  if(analogRead(botonA)>=1000) armar();
+  if(analogRead(botonB)>=1000) NoStarter();
+  if(analogRead(botonC)>=1000) activarA();
+  if(analogRead(botonD)>=1000) desactivarA();
+
+  interruptores();
+
+  contador++;
+  if((contador == 1000)&&(estado==1)) {
+    digitalWrite(ledindicador, LOW);
+    SensaD(); 
+    comparaD();
+  }
+  if(contador >= 2000) {
+    digitalWrite(ledindicador, HIGH);
+    contador = 0;
+    if(estadoAlarma==1) tiempo++;
+    if(tiempo >= TiempoAlarma) {
+        desactivarA();
+        estado = 1;
+        estadoAlarma=0;
+        tiempo = 0;
+        armar(); 
+    } 
+  }
+}
+
+void armar() {
+  
+  digitalWrite(3, LOW);
+  digitalWrite(sirena, HIGH);
+  delay (400);
+  digitalWrite(sirena, LOW);
+  estado = 1;
+  contadorFdistancia = 0;
+  
+}
+
+void NoStarter() {
+  digitalWrite(starter, HIGH);
+}
+
+void activarA() {
+  digitalWrite(sirena, HIGH);
+  digitalWrite(starter, HIGH);
+  estadoAlarma=1;
+  tiempo=0;
+}
+
+void desactivarA() {
+  digitalWrite(sirena, HIGH);
+  delay (100);
+  digitalWrite(sirena, LOW);
+  digitalWrite(starter, LOW);
+  estado = 0;
+  estadoAlarma=0;
+}
+
+void  interruptores() {
+ if(estado == 1) { 
+    if((interruptor4 == 1) && (digitalRead(inter4)==1)) activarA();  // (inter4)==1 retorno de GND, (inter4)==0 retorno de 5V
+    if((interruptor5 == 1) && (digitalRead(inter5)==1)) activarA();
+    if((interruptor6 == 1) && (digitalRead(inter6)==1)) activarA();
+    if((interruptor7 == 1) && (digitalRead(inter7)==1)) activarA();
+    if((interruptor8 == 1) && (digitalRead(inter8)==1)) activarA();
+    if((interruptor9 == 1) && (digitalRead(inter9)==1)) activarA();
+ } 
+}
+
+void SensaD() {
+ if((estado == 1)&&(SensorDistancia == 1)) { 
+  digitalWrite(3, LOW);   
+  delay(1);
+  digitalWrite(3, HIGH);   // genera el pulso de triger por 10us
+  delay(0.01);
+  digitalWrite(3, LOW);
+  duracion = pulseIn(2, HIGH);
+  distancia = (duracion/2) / 29;    // calcula la distancia en centimetros
+  
+  }
+}
+
+void comparaD() {
+  contadorFdistancia++;
+ if((estado == 1)&&(SensorDistancia == 1)&&(contadorFdistancia >= 5)) { 
+   if(distancia >= (distanciaFija + 10)) activarA();
+   if(distancia <= (distanciaFija - 10)) activarA();
+ }
+ if(contadorFdistancia == 4) { 
+   distanciaFija = distancia;
+ }
+}
+

@@ -1,0 +1,44 @@
+int echo=8;
+int trig=9;
+
+void setup() {
+  Serial.begin (9600);
+  pinMode(13,INPUT);
+  pinMode (echo, INPUT);
+  pinMode(7,OUTPUT); 
+  pinMode (12,OUTPUT);
+  pinMode (trig, OUTPUT);
+  digitalWrite(trig, LOW);
+}
+
+void loop() {
+   
+  long duracion;
+   long distancia; // float distancia para obtener decimales
+   long dl;
+  duracion=pulseIn(echo,HIGH);
+  distancia=(duracion  / 59); // (cm)
+  dl = distancia/3;
+  if (distancia>=500 || distancia <= 0 && digitalRead(13)==LOW){
+      Serial.println("--- Sin medicion ---");
+  }
+  else {
+     Serial.print("Distancia: ");
+     Serial.print(distancia);
+     Serial.println(" cm");
+     digitalWrite(7,LOW);
+     digitalWrite(trig,HIGH);
+  }
+ if (digitalRead(13)==HIGH ){
+      digitalWrite(7,HIGH);
+      digitalWrite(12,HIGH);
+      digitalWrite(trig,HIGH);
+     Serial.println("UNI-Alarma activada...INTRUSO"); 
+      delay(2000);
+      digitalWrite(12,LOW);
+      delay(200);
+      digitalWrite(trig,LOW); 
+      digitalWrite(7,LOW);
+   }
+delay(10);
+ }
